@@ -7,7 +7,7 @@
         <artifactId>lcDelayTaskFrame</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <groupId>com.lc.dealy.frame</groupId>
+    <groupId>com.lc.delay.frame</groupId>
     <artifactId>delayCommon</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
@@ -19,8 +19,10 @@
     </properties>
 
     <dependencies>
-        
-
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

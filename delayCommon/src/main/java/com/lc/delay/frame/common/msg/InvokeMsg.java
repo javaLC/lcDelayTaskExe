@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * 统一消息定义。 <br>
  * 不建议直接使用new InvokeMsg
- * {@link TaskMsgBuilder}
+ * {@link InvokeMsgBuilder}
  *
  * @author liuchong
  * @version InvokeMsg.java, v 0.1 2020年02月21日 18:48

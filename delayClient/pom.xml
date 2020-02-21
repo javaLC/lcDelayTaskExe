@@ -33,6 +33,11 @@
             <artifactId>spring-boot-starter-test</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.lc.dealy.frame</groupId>
+            <artifactId>delayCommon</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
