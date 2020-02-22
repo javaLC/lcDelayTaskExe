@@ -13,18 +13,18 @@ import java.io.Serializable;
 public class InvokeMsg implements Serializable {
 
     /**
-     * 消息类型。这里分为：1-任务消息，2-回调消息
+     * 消息类型。这里分为：1-任务消息，2-回调消息{@link com.lc.delay.frame.common.InvokeType}
      * 其实从调度来说：不管是真正的任务，还是任务完后回调，本质上都可以看作一次调度
      */
     private int type;
-    /**
-     * 调用注册队列。
-     */
+    /** 调用注册队列 */
     private String registerQueue;
     /** 调度时入参json格式 */
     private String paramJson;
     /** 参数对应类型 */
     private String paramClass;
+    /** 任务延迟时间（毫秒） */
+    private int delay;
 
     public int getType() {
         return type;
@@ -56,5 +56,15 @@ public class InvokeMsg implements Serializable {
 
     public void setParamClass(String paramClass) {
         this.paramClass = paramClass;
+    }
+
+    public int getDelay() {
+        return delay;
+    }
+
+    public void setDelay(int delay) {
+        if(delay > 0) {
+            this.delay = delay;
+        }
     }
 }

@@ -29,8 +29,12 @@ public abstract class AbsRocketConsumer implements InitializingBean, DisposableB
     private RocketMqConfig config;
     private DefaultMQPushConsumer consumer;
 
+    public AbsRocketConsumer(RocketMqConfig config) {
+        this.config = config;
+    }
+
     /**
-     * 消费处理
+     * 消费处理(暂时不做消费成功与否的返回)
      * @param msg
      */
     protected abstract void consume(InvokeMsg msg);

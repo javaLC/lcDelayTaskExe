@@ -1,6 +1,7 @@
 package com.lc.delay.frame.common.rocketmq;
 
 /**
+ * rocketmq配置
  *
  * @author liuchong
  * @version RocketMqConfig.java, v 0.1 2020年02月21日 23:25

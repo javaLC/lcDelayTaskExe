@@ -1,7 +1,7 @@
 package com.lc.delay.frame.delayserver.dispatch;
 
 /**
- * 调度分发器
+ * 任务调度分发器
  *
  * @author liuchong
  * @version InvokeDispatcher.java, v 0.1 2020年02月21日 21:19

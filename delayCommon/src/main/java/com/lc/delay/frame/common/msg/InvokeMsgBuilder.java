@@ -11,11 +11,12 @@ import java.io.Serializable;
  * @author liuchong
  * @version InvokeMsgBuilder.java, v 0.1 2020年02月21日 18:57
  */
-public class InvokeMsgBuilder<T extends Serializable> {
+public class InvokeMsgBuilder {
 
     private InvokeMsg msg = new InvokeMsg();
 
-    private InvokeMsgBuilder() {}
+    private InvokeMsgBuilder() {
+    }
 
     /**
      * 构建任务类型的消息
@@ -45,12 +46,25 @@ public class InvokeMsgBuilder<T extends Serializable> {
      * 构建请求参数
      * @return
      */
-    public InvokeMsgBuilder buildReqParam(T param) {
+    public <T extends Serializable> InvokeMsgBuilder buildReqParam(T param) {
         if (param != null) {
             msg.setParamClass(param.getClass().getName());
             msg.setParamJson(JSON.toJSONString(param));
         }
 
+        return this;
+    }
+
+    /**
+     * 构建延迟
+     * @param delaySecond
+     * @return
+     */
+    public InvokeMsgBuilder buildDelayTime(int delaySecond) {
+        // 如果延迟时间小于等于0，说明是实时任务执行，不需要延迟
+        if (delaySecond > 0) {
+            msg.setDelay(delaySecond * 1000);
+        }
         return this;
     }
 
