@@ -1,5 +1,19 @@
 package com.lc.delay.frame.delayclient;
 
+import java.io.Serializable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.alibaba.fastjson.JSON;
 import com.lc.delay.frame.common.InvokeType;
 import com.lc.delay.frame.common.msg.InvokeMsg;
@@ -9,18 +23,6 @@ import com.lc.delay.frame.delayclient.invoke.InvokeManager;
 import com.lc.delay.frame.delayclient.invoke.RocketMqInvokeDispatcher;
 import com.lc.delay.frame.delayclient.job.CallBackJob;
 import com.lc.delay.frame.delayclient.job.TaskJob;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.io.Serializable;
 
 /**
  * @author liuchong
@@ -30,6 +32,7 @@ import java.io.Serializable;
 @Configuration
 @RestController
 public class MyClientApplication {
+    private Logger log = LoggerFactory.getLogger(MyClientApplication.class);
 
     public static void main(String[] args) {
         SpringApplication.run(MyClientApplication.class, args);
@@ -45,7 +48,12 @@ public class MyClientApplication {
 
     @RequestMapping("/submitTask")
     public String submitTask(String taskName, Integer delay) {
+        if(taskName == null) {
+            return "任务名不能为空";
+        }
+        log.info("正在添加任务：" + taskName);
 
+        // 参数之类的就默认
         InvokeMsg msg = InvokeMsgBuilder.buidlTaskMsg(taskName).buildDelayTime(delay == null ? 0 : delay)
             .buildReqParam(new TestParam("参数1", "参数2")).toTaskMsg();
 
@@ -53,7 +61,7 @@ public class MyClientApplication {
             @Override
             public String doTask(InvokeMsg param) {
                 // 通用执行逻辑。
-                System.out.println(JSON.toJSONString(System.currentTimeMillis() + "任务执行：" + JSON.toJSONString(param)));
+                log.info(JSON.toJSONString(System.currentTimeMillis() + "任务执行：" + JSON.toJSONString(param)));
                 return null;
             }
         }, new CallBackJob<InvokeMsg>() {
@@ -61,7 +69,7 @@ public class MyClientApplication {
             @Override
             public String callback(InvokeMsg param) {
             	// 回调
-                System.out.println(JSON.toJSONString(System.currentTimeMillis() + "任务执行完后回调：" + JSON.toJSONString(param)));
+                log.info(JSON.toJSONString(System.currentTimeMillis() + "任务执行完后回调：" + JSON.toJSONString(param)));
                 return null;
             }
         });

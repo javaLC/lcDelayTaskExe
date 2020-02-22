@@ -1,7 +1,6 @@
 package com.lc.delay.frame.common.rocketmq;
 
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
-import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.remoting.common.RemotingHelper;
 import org.slf4j.Logger;
@@ -52,14 +51,12 @@ public abstract class AbsRocketProducer implements InitializingBean, DisposableB
         }
     }
 
-    @Override
     public void afterPropertiesSet() throws Exception {
         producer = new DefaultMQProducer(config.getGroup());
         producer.setNamesrvAddr(config.getHost());
         producer.start();
     }
 
-    @Override
     public void destroy() throws Exception {
         producer.shutdown();
     }

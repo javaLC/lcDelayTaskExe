@@ -52,12 +52,14 @@ public class RocketMqInvokeDispatcher extends AbsRocketProducer
         continueFetcher = true;
 
         invokeFetcher.submit(() -> {
+
+            int scope = 1;
             while (continueFetcher) {
 
                 // 获取所有任务队列名称。这里单线程进行任务数据获取。如果有很多不同任务，则会影响整体时间执行精度
                 redisUtil.fetchAllTaskName().forEach(taskName -> {
 
-                    List<TaskModel> tasks = redisUtil.fetchTask(taskName, 1);
+                    List<TaskModel> tasks = redisUtil.fetchTask(taskName, scope);
 
                     for(TaskModel t : tasks) {
                         InvokeMsg msg = new InvokeMsg();
@@ -73,6 +75,12 @@ public class RocketMqInvokeDispatcher extends AbsRocketProducer
                         dispatch(msg);
                     }
                 });
+                try {
+                    // 上面每次拉去最近1S内的。
+                    Thread.sleep(scope * 1000);
+                } catch (Exception e) {
+
+                }
             }
         });
     }

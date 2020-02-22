@@ -39,19 +39,16 @@ public abstract class AbsRocketConsumer implements InitializingBean, DisposableB
      */
     protected abstract void consume(InvokeMsg msg);
 
-    @Override
     public void destroy() throws Exception {
         consumer.shutdown();
     }
 
-    @Override
     public void afterPropertiesSet() throws Exception {
         consumer = new DefaultMQPushConsumer(config.getGroup());
         consumer.setNamesrvAddr(config.getHost());
         consumer.subscribe(config.getTopic(), "*");
         consumer.registerMessageListener(new MessageListenerConcurrently() {
 
-            @Override
             public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
                 for(MessageExt ext : msgs) {
                     try {

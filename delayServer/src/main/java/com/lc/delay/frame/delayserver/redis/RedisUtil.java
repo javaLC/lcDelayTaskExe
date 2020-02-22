@@ -11,6 +11,7 @@ import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
 import com.alibaba.fastjson.JSONObject;
@@ -40,12 +41,12 @@ public class RedisUtil {
      */
     public List<TaskModel> fetchTask(String taskName, int delaySeconds) {
         final long maxScore = System.currentTimeMillis() + delaySeconds * 1000;
-        // ZREMRANGEBYSCORE
-        Set<String> tasks = template.opsForZSet().rangeByScore(taskName, 0, maxScore);
+
+        Set<ZSetOperations.TypedTuple<String>> tasks = template.opsForZSet().rangeWithScores(taskName, 0, maxScore);
         List<TaskModel> res = new ArrayList<>();
         if (tasks != null && !tasks.isEmpty()) {
             tasks.forEach(task -> {
-                res.add(JSONObject.parseObject(task, TaskModel.class));
+                res.add(JSONObject.parseObject(task.getValue(), TaskModel.class));
             });
 
             // 删除。暂忽略删除时，刚好新增任务满足该条件

@@ -18,7 +18,8 @@ public enum InvokeType {
     private String desc;
 
     private InvokeType(int type, String desc) {
-
+        this.type = type;
+        this.desc = desc;
     }
 
     public int getType() {

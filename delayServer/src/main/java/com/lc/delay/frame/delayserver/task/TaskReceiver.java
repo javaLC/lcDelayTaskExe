@@ -3,6 +3,7 @@ package com.lc.delay.frame.delayserver.task;
 import java.util.UUID;
 
 import com.lc.delay.frame.common.InvokeType;
+import com.lc.delay.frame.delayserver.dispatch.RocketMqInvokeDispatcher;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.lc.delay.frame.common.msg.InvokeMsg;
@@ -31,12 +32,13 @@ public class TaskReceiver extends AbsRocketConsumer {
     protected void consume(InvokeMsg msg) {
         // 优化，如果是回调型的消息，则直接进行回调，无需存储
         if(msg.getType() == InvokeType.CALLBACK.getType()) {
+            rocketMqInvokeDispatcher.dispatch(msg);
             return;
         }
 
         TaskModel task = new TaskModel();
 
-        task.setDelayScore(System.currentTimeMillis() + msg.getDelay() * 1000);
+        task.setDelayScore(msg.getDelay());
         task.setTaskClass(msg.getParamClass());
         task.setTaskId(UUID.randomUUID().toString());
         task.setTaskName(msg.getRegisterQueue());
@@ -45,4 +47,7 @@ public class TaskReceiver extends AbsRocketConsumer {
 
         redisStorageManager.addTask(task);
     }
+
+    @Autowired
+    RocketMqInvokeDispatcher rocketMqInvokeDispatcher;
 }
