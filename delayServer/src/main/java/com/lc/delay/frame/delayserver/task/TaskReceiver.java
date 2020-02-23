@@ -36,14 +36,17 @@ public class TaskReceiver extends AbsRocketConsumer {
 
     @Override
     protected void consume(InvokeMsg msg) {
+        TaskModel task = TaskUtil.toTaskModel(msg);
+        task.setReceiveTime(DateUtils.formatDate(new Date(), DateUtils.yyyy_MM_dd_HH_mm_ss_SSS));
+
         // 优化，如果是回调型的消息，则直接进行回调，无需存储
         if(msg.getType() == InvokeType.CALLBACK.getType()) {
-            rocketMqInvokeDispatcher.dispatch(msg);
+            // 回调类型的直接通知，不延迟
+            task.setDelayScore(0);
+            rocketMqInvokeDispatcher.dispatch(task);
             return;
         }
 
-        TaskModel task = TaskUtil.toTaskModel(msg);
-        task.setReceiveTime(DateUtils.formatDate(new Date(), DateUtils.yyyy_MM_dd_HH_mm_ss_SSS));
 
         log.info("接收到任务请求：" + task.toString());
 

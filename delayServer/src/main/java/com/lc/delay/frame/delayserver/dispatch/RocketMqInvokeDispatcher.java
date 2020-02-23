@@ -7,17 +7,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import com.lc.delay.frame.common.util.DateUtils;
-import com.lc.delay.frame.delayserver.util.TaskUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.lc.delay.frame.common.msg.InvokeMsg;
 import com.lc.delay.frame.common.rocketmq.AbsRocketProducer;
 import com.lc.delay.frame.common.rocketmq.RocketMqConfig;
+import com.lc.delay.frame.common.util.DateUtils;
 import com.lc.delay.frame.delayserver.redis.RedisUtil;
 import com.lc.delay.frame.delayserver.task.TaskModel;
+import com.lc.delay.frame.delayserver.util.TaskUtil;
 
 /**
  * rockmq形式的mq消息进行调度(将调度和通信放一起，不拆了)
@@ -26,22 +25,48 @@ import com.lc.delay.frame.delayserver.task.TaskModel;
  * @version RocketMqInvokeDispatcher.java, v 0.1 2020年02月21日 21:13
  */
 public class RocketMqInvokeDispatcher extends AbsRocketProducer
-                                      implements InvokeDispatcher<InvokeMsg> {
+                                      implements InvokeDispatcher<TaskModel> {
 
     private Logger log = LoggerFactory.getLogger(RocketMqInvokeDispatcher.class);
 
 
     @Autowired
     RedisUtil redisUtil;
+    // 任务扫描周期：秒（可写入配置）
+    int taskScanPeriod = 1;
 
     public RocketMqInvokeDispatcher(RocketMqConfig config) {
         super(config);
     }
 
     @Override
-    public void dispatch(InvokeMsg param) {
-        if (param.getDelay() > 0) {
-            invokeExecutor.schedule( ()-> notifyTask(param), param.getDelay(),
+    public void dispatch(TaskModel param) {
+        long leaveDelayMill = 0;
+        Date receiveTaskDate = null;
+        try {
+            // 只有任务本身就有延迟，进行延迟精确计算才有意义
+            if (param.getDelayScore() > 0) {
+
+                receiveTaskDate = DateUtils.parseDate(param.getReceiveTime(), DateUtils.yyyy_MM_dd_HH_mm_ss_SSS);
+
+                if (receiveTaskDate == null) {
+                    receiveTaskDate = DateUtils.parseDate(param.getReceiveTime(), DateUtils.yyyy_MM_dd_HH_mm_ss);
+                }
+            }
+        }catch(Exception e) {
+        }
+
+        if(receiveTaskDate != null) {
+            leaveDelayMill = System.currentTimeMillis() - receiveTaskDate.getTime();
+        }
+        // 合理性比较。redis对延迟任务对存储是根据时间排序的。如果能在当前周期中获取到任务，则说明，该任务在未来taskScanPeriod内执行
+        // 同时，也说明任务数据到中的《任务接收时间》已经被非法串改。
+        if(leaveDelayMill > (taskScanPeriod * 1000)) {
+            leaveDelayMill = taskScanPeriod * 1000;
+        }
+
+        if (leaveDelayMill > 0) {
+            invokeExecutor.schedule( ()-> notifyTask(param), leaveDelayMill,
                 TimeUnit.MILLISECONDS);
         } else {
             notifyTask(param);
@@ -50,12 +75,13 @@ public class RocketMqInvokeDispatcher extends AbsRocketProducer
 
     /**
      * 唤起执行任务
-     * @param msg
+     * @param task
      */
-    private void notifyTask(InvokeMsg msg) {
+    private void notifyTask(TaskModel task) {
         log.info("开始执行任务请求，通知时间为：" + DateUtils.formatDate(new Date(), DateUtils.yyyy_MM_dd_HH_mm_ss_SSS) + ", 任务信息:"
-                 + TaskUtil.toTaskModel(msg).toString());
-        sendInvokeMsg(msg);
+                 + task.toString());
+
+        sendInvokeMsg(TaskUtil.toInvokeMsg(task));
     }
 
 
@@ -76,7 +102,6 @@ public class RocketMqInvokeDispatcher extends AbsRocketProducer
         invokeFetcher.submit(() -> {
 
             // 可配置化
-            int scope = 1;
             while (continueFetcher) {
 
                 // 获取所有任务队列名称。这里单线程进行任务数据获取。如果有很多不同任务，则会影响整体时间执行精度
@@ -84,19 +109,22 @@ public class RocketMqInvokeDispatcher extends AbsRocketProducer
 
                     List<TaskModel> tasks = null;
                     try {
-                        tasks = redisUtil.consumeTask(taskName, scope);
+                        tasks = redisUtil.consumeTask(taskName, taskScanPeriod);
                     } catch (Exception e) {
                         log.error("获取任务数据异常", e);
                     }
 
                     for(TaskModel t : tasks) {
-
-                        dispatch(TaskUtil.toInvokeMsg(t));
+                        try {
+                            dispatch(t);
+                        }catch (Exception e) {
+                            log.error("执行任务调度异常：" + t, e);
+                        }
                     }
                 });
                 try {
                     // 上面每次拉去最近scope内的。
-                    Thread.sleep(scope * 1000);
+                    Thread.sleep(taskScanPeriod * 1000);
                 } catch (Exception e) {
                 }
             }

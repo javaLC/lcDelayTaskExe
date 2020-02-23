@@ -32,4 +32,18 @@ public class DateUtils {
         }
     }
 
+    /**
+     *
+     * @param dateStr
+     * @param pattern
+     * @return
+     */
+    public static Date parseDate(String dateStr, String pattern) {
+        try {
+            return new SimpleDateFormat(pattern).parse(dateStr);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
 }
