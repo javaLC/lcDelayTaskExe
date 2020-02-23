@@ -1,10 +1,9 @@
 package com.lc.delay.frame.delayserver.task;
 
-import com.lc.delay.frame.delayserver.redis.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import com.lc.delay.frame.delayserver.redis.RedisUtil;
 
 /**
  * redis存储任务
@@ -28,8 +27,4 @@ public class RedisTaskStorageManager implements TaskStorageManger {
         //
     }
 
-    @Override
-    public List<TaskModel> queryRedisTask(String queueName, int delayTime) {
-        return redis.fetchTask(queueName, delayTime);
-    }
 }

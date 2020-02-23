@@ -6,6 +6,10 @@ import com.lc.delay.frame.common.rocketmq.RocketMqConfig;
 import com.lc.delay.frame.delayclient.invoke.InvokeManager;
 import com.lc.delay.frame.delayclient.job.CallBackJob;
 import com.lc.delay.frame.delayclient.job.TaskJob;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.UUID;
 
 /**
  *
@@ -15,6 +19,8 @@ import com.lc.delay.frame.delayclient.job.TaskJob;
  * @version DelayClient.java, v 0.1 2020年02月21日 21:42
  */
 public class DelayClient extends AbsRocketProducer {
+
+    private Logger log = LoggerFactory.getLogger(DelayClient.class);
 
     public DelayClient(RocketMqConfig config) {
         super(config);
@@ -40,6 +46,8 @@ public class DelayClient extends AbsRocketProducer {
 
         // 提交的是任务，强制更新
         taskMsg.setType(task.getJobType().getType());
+        // 为了观察任务客户端和服务端的关系，在这里就指定
+        taskMsg.setMsgId(UUID.randomUUID().toString());
 
         // 注册任务
         InvokeManager.registerInvokeJob(task, taskMsg.getRegisterQueue());
@@ -47,7 +55,9 @@ public class DelayClient extends AbsRocketProducer {
         InvokeManager.registerInvokeJob(callback, taskMsg.getRegisterQueue());
 
         // 提交任务发送
-        sendInvokeMsg(taskMsg);
+        if(sendInvokeMsg(taskMsg)) {
+            log.info("客户端请求提交任务，任务ID：" + taskMsg.getMsgId());
+        }
     }
 
 

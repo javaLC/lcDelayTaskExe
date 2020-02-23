@@ -24,12 +24,4 @@ public interface TaskStorageManger {
      */
     void delTask(String taskId);
 
-    /**
-     * 查询任务（针对题设定义个查询）
-     *
-     * @return
-     */
-    List<TaskModel> queryRedisTask(String queueName, int delayTime);
-
-
 }

@@ -1,5 +1,7 @@
 package com.lc.delay.frame.delayserver.task;
 
+import com.lc.delay.frame.common.InvokeType;
+
 import java.io.Serializable;
 
 /**
@@ -24,6 +26,8 @@ public class TaskModel implements Serializable {
 
     /** 延迟执行分数：存入时时间 + 延迟时间。（毫秒） */
     private long delayScore;
+    /** 接收任务时时间 */
+    private String receiveTime;
 
     /*
     对于任务模型而言，这里不做过多设计，先简单点，针对此次题设。
@@ -80,5 +84,24 @@ public class TaskModel implements Serializable {
 
     public void setDelayScore(long delayScore) {
         this.delayScore = delayScore;
+    }
+
+    public String getReceiveTime() {
+        return receiveTime;
+    }
+
+    public void setReceiveTime(String receiveTime) {
+        this.receiveTime = receiveTime;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(480);
+
+        sb.append("{接收任务时:").append(receiveTime).append(", 任务ID:").append(taskId).append(", 任务名称:").append(taskName)
+            .append(", 任务参数:").append(taskParam).append(", 参数类型:").append(taskClass).append(", 任务类型:")
+            .append(InvokeType.getInvokeType(type)).append(", 延迟时长:").append(delayScore).append("毫秒}");
+
+        return sb.toString();
     }
 }

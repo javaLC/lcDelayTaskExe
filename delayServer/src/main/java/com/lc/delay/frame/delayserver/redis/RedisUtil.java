@@ -35,29 +35,22 @@ public class RedisUtil {
     StringRedisTemplate template;
 
     /**
-     * 获取数据
+     * 获取并移除任务数据
      * @param taskName
+     * @param futureSeconds 最近xxx秒需要执行的任务
      * @return
      */
-    public List<TaskModel> fetchTask(String taskName, int delaySeconds) {
-        final long maxScore = System.currentTimeMillis() + delaySeconds * 1000;
+    public List<TaskModel> consumeTask(String taskName, int futureSeconds) {
+        final long maxScore = System.currentTimeMillis() + futureSeconds * 1000;
 
-        Set<ZSetOperations.TypedTuple<String>> tasks = template.opsForZSet().rangeWithScores(taskName, 0, maxScore);
+        Set<String> tasks = template.opsForZSet().rangeByScore(taskName, 0.0, maxScore);
         List<TaskModel> res = new ArrayList<>();
+
         if (tasks != null && !tasks.isEmpty()) {
-            tasks.forEach(task -> {
-                res.add(JSONObject.parseObject(task.getValue(), TaskModel.class));
-            });
+            tasks.forEach(task -> res.add(JSONObject.parseObject(task, TaskModel.class)));
 
             // 删除。暂忽略删除时，刚好新增任务满足该条件
-            template.execute(new RedisCallback() {
-                @Override
-                public Object doInRedis(RedisConnection redisConnection) throws DataAccessException {
-                    // 为什么不返回删除的数据
-                    redisConnection.zRemRange(null, 0, maxScore);
-                    return null;
-                }
-            });
+            template.opsForZSet().removeRangeByScore(taskName, 0.0, maxScore);
         }
 
         return res;
@@ -68,9 +61,10 @@ public class RedisUtil {
      * @param task
      */
     public void addTask(TaskModel task) {
+        // 在当前时间上加上延迟时间
+        double score = System.currentTimeMillis() + task.getDelayScore();
 
-        double score = task.getDelayScore();
-
+        // 本次是根据任务名（或者说任务类型）而创建队列。其实也可以只有用一个队列就行了。只需要在这里将队列名固定即可
         template.opsForZSet().add(task.getTaskName(), JSONObject.toJSONString(task), score);
 
         addTaskQueue(task.getTaskName());
@@ -81,7 +75,7 @@ public class RedisUtil {
      * @param taskName
      */
     public void addTaskQueue(String taskName) {
-        // 可以使用zset进行任务统计。本题设中，就不这么做了。
+        // 可以使用zset进行任务统计。本题设中，只记录所有任务名，不做统计。
         template.opsForSet().add(taskNameQueue, taskName);
     }
 

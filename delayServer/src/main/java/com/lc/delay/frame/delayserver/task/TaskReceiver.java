@@ -1,15 +1,19 @@
 package com.lc.delay.frame.delayserver.task;
 
-import java.util.UUID;
+import java.util.Date;
 
-import com.lc.delay.frame.common.InvokeType;
-import com.lc.delay.frame.delayserver.dispatch.RocketMqInvokeDispatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.lc.delay.frame.common.InvokeType;
 import com.lc.delay.frame.common.msg.InvokeMsg;
 import com.lc.delay.frame.common.rocketmq.AbsRocketConsumer;
 import com.lc.delay.frame.common.rocketmq.RocketMqConfig;
+import com.lc.delay.frame.common.util.DateUtils;
+import com.lc.delay.frame.delayserver.dispatch.RocketMqInvokeDispatcher;
 import com.lc.delay.frame.delayserver.redis.RedisUtil;
+import com.lc.delay.frame.delayserver.util.TaskUtil;
 
 /**
  * 任务接收(简单实现，不做设计了)
@@ -18,6 +22,8 @@ import com.lc.delay.frame.delayserver.redis.RedisUtil;
  * @version TaskReceiver.java, v 0.1 2020年02月22日 13:55
  */
 public class TaskReceiver extends AbsRocketConsumer {
+
+    private Logger log = LoggerFactory.getLogger(TaskReceiver.class);
 
     @Autowired
     TaskStorageManger redisStorageManager;
@@ -36,18 +42,15 @@ public class TaskReceiver extends AbsRocketConsumer {
             return;
         }
 
-        TaskModel task = new TaskModel();
+        TaskModel task = TaskUtil.toTaskModel(msg);
+        task.setReceiveTime(DateUtils.formatDate(new Date(), DateUtils.yyyy_MM_dd_HH_mm_ss_SSS));
 
-        task.setDelayScore(msg.getDelay());
-        task.setTaskClass(msg.getParamClass());
-        task.setTaskId(UUID.randomUUID().toString());
-        task.setTaskName(msg.getRegisterQueue());
-        task.setTaskParam(msg.getParamJson());
-        task.setType(msg.getType());
+        log.info("接收到任务请求：" + task.toString());
 
         redisStorageManager.addTask(task);
     }
 
     @Autowired
     RocketMqInvokeDispatcher rocketMqInvokeDispatcher;
+
 }

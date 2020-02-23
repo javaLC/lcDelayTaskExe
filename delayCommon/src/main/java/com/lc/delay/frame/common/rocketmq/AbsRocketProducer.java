@@ -33,7 +33,7 @@ public abstract class AbsRocketProducer implements InitializingBean, DisposableB
      *
      * @param invokeMsg
      */
-    protected void sendInvokeMsg(InvokeMsg invokeMsg) {
+    protected boolean sendInvokeMsg(InvokeMsg invokeMsg) {
         String body = JSON.toJSONString(invokeMsg);
         /*
             rocketmq暂时只支持延迟等级的消息延迟发送。
@@ -46,8 +46,10 @@ public abstract class AbsRocketProducer implements InitializingBean, DisposableB
             Message msg = new Message(config.getTopic(), invokeMsg.getRegisterQueue(),
                 body.getBytes(RemotingHelper.DEFAULT_CHARSET));
             producer.send(msg);
+            return true;
         } catch (Exception e) {
             log.error("发送调用消息失败msg：" + JSON.toJSONString(invokeMsg), e);
+            return false;
         }
     }
 

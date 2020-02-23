@@ -19,7 +19,7 @@ import com.lc.delay.frame.delayserver.task.TaskReceiver;
  * @author liuchong
  * @version MyServerApplication.java, v 0.1 2020年02月21日 14:26
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = { "com.lc.delay.frame" })
 @RestController
 @Configuration
 public class MyServerApplication {

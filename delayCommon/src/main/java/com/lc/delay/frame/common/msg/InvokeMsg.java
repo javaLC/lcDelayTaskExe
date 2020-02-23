@@ -25,6 +25,10 @@ public class InvokeMsg implements Serializable {
     private String paramClass;
     /** 任务延迟时间（毫秒） */
     private int delay;
+    /** 消息发送时时间 */
+    private String notifyTime;
+    /** 为了打印查看效果方便。这由服务器生成，与消rocketmq无关 */
+    private String msgId;
 
     public int getType() {
         return type;
@@ -66,5 +70,21 @@ public class InvokeMsg implements Serializable {
         if(delay > 0) {
             this.delay = delay;
         }
+    }
+
+    public String getNotifyTime() {
+        return notifyTime;
+    }
+
+    public void setNotifyTime(String notifyTime) {
+        this.notifyTime = notifyTime;
+    }
+
+    public String getMsgId() {
+        return msgId;
+    }
+
+    public void setMsgId(String msgId) {
+        this.msgId = msgId;
     }
 }
