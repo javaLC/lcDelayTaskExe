@@ -64,6 +64,10 @@ public class RocketMqInvokeDispatcher extends AbsRocketProducer
         if(leaveDelayMill > (taskScanPeriod * 1000)) {
             leaveDelayMill = taskScanPeriod * 1000;
         }
+        // 合理性比较。排除由于不同服务器机器时差问题
+        if(leaveDelayMill > param.getDelayScore()) {
+            leaveDelayMill = param.getDelayScore();
+        }
 
         if (leaveDelayMill > 0) {
             invokeExecutor.schedule( ()-> notifyTask(param), leaveDelayMill,
